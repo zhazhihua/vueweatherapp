@@ -1,21 +1,11 @@
 <template>
   <div class="cloudy">
-    <div class="location">
-      南昌
-    </div>
-    <div class="temperature">
-      16°
-    </div>
-    <div class="wind">
-      阴|北风三级
-    </div>
-    <div class="air">
-      9优>
-    </div>
+    <div class="location" @click="showweather">{{city}}</div>
+    <div class="temperature">{{nowweather.tem}}°</div>
+    <div class="wind">{{nowweather.wea}}|{{nowweather.win}}{{nowweather.win_speed}}</div>
+    <div class="air">{{nowweather.air}}{{temperature.air_level}}></div>
     <div class="todayweather">
-      <span>
-        今天：阴转多云 14至20℃ 北风4-5级
-      </span>
+      <span> 今天：{{nowweather.wea}}&nbsp;&nbsp;{{nowweather.tem2}}至{{nowweather.tem1}}℃&nbsp;&nbsp;{{nowweather.win}}{{nowweather.win_speed}}</span>
     </div>
     <div class="charts"></div>
     <div class="date">
@@ -46,44 +36,104 @@
 </template>
 
 <script>
-import * as echarts from 'echarts'
+import * as echarts from "echarts";
+import axios from 'axios'
+import {nextTick} from 'vue'
 export default {
-  name: 'HomePage',
+  name: "HomePage",
+  data() {
+    return {
+      city:'南昌',
+      time:[],
+      temperature:[],
+      nowweather:{},
+      flag:true
+    };
+  },
   methods: {
+    showweather(){
+      this.getWeatherData();
+      //this.getnowWeatherData();
+    },
+    getWeatherData(){
+      axios.get(`https://v0.yiketianqi.com/api/worldchina?appid=24831698&appsecret=p8sIVJ6B&city=${this.city}`)
+      .then((res)=>{
+        if(this.flag){
+          res.data.hours.slice(0,5).forEach((item)=>{
+            this.time.push(item.time)
+          })
+        }
+      })
+    },
+    // getnowWeatherData(){
+    //   axios.get(`https://v0.yiketianqi.com/api?unescape=1&version=v61&appid=24831698&appsecret=p8sIVJ6B&city=${this.city}`)
+    //   .then((res)=>{
+    //     this.nowweather = res.data
+    //   })
+    // },
     showecharts() {
-      var chartDom = document.querySelector('.charts');
+      var chartDom = document.querySelector(".charts");
       var myChart = echarts.init(chartDom);
       var option;
       option = {
         xAxis: {
-          type: 'category',
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+          type: "category",
+          data: this.time,
+          axisTick: {
+            show: false,
+          },
+          axisLabel: {
+            show: true,
+            textStyle: {
+              color: "#fff",
+            },
+          },
         },
         yAxis: {
-          type: 'value'
+          show: false,
+          type: "value",
         },
         series: [
           {
-            data: [150, 230, 224, 218, 135, 147, 260],
-            type: 'line'
-          }
-        ]
+            data: [15, 16, 18, 18, 13, 14, 26],
+            type: "line",
+            label: {
+              show: true,
+              formatter(data) {
+                return data.value + "°";
+              },
+            },
+            itemStyle: {
+              normal: {
+                color: "#fff", //改变折线点的颜色
+                lineStyle: {
+                  color: "#fff", //改变折线颜色
+                },
+              },
+            },
+          },
+        ],
       };
 
       option && myChart.setOption(option);
-    }
+    },
   },
-  mounted(){
-    this.showecharts()
-  }
-}
+  mounted() {
+    
+    this.showecharts();
+  },
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .cloudy {
   height: 100vh;
-  background-image: linear-gradient(to bottom, rgb(75, 86, 98), rgb(165, 183, 200));
+  background-image: linear-gradient(
+    to bottom,
+    rgb(75, 86, 98),
+    rgb(165, 183, 200)
+  );
 }
 
 .temperature {
@@ -119,11 +169,11 @@ export default {
   height: 40vh;
   margin-top: 5vh;
 }
-.date{
+.date {
   background-color: #fff;
   height: 18vh;
 }
-.date ul{
+.date ul {
   display: flex;
   padding: 0;
 }
@@ -133,7 +183,7 @@ export default {
   justify-content: space-around;
   list-style: none;
 }
-.date ul li p{
+.date ul li p {
   color: #000;
   text-align: center;
   margin-top: 2vh;
